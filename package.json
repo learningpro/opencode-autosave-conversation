@@ -1,0 +1,57 @@
+{
+  "name": "opencode-autosave-conversation",
+  "version": "1.0.0",
+  "description": "OpenCode plugin to automatically save conversation records to markdown files",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "lint": "eslint src --ext .ts",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "opencode",
+    "plugin",
+    "conversation",
+    "backup",
+    "markdown",
+    "autosave"
+  ],
+  "author": "orange",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/learningpro/opencode-autosave-conversation.git"
+  },
+  "homepage": "https://github.com/learningpro/opencode-autosave-conversation#readme",
+  "bugs": {
+    "url": "https://github.com/learningpro/opencode-autosave-conversation/issues"
+  },
+  "dependencies": {
+    "@opencode-ai/plugin": "^1.1.42",
+    "@opencode-ai/sdk": "^1.1.42"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.0.0",
+    "@typescript-eslint/parser": "^8.0.0",
+    "eslint": "^9.0.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.8.0",
+    "typescript-eslint": "^8.54.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
