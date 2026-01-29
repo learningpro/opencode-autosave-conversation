@@ -95,18 +95,27 @@ interface RawPart {
 const debounceTimers = new Map<string, ReturnType<typeof setTimeout>>();
 
 const plugin: Plugin = async (input) => {
-  const { client, directory } = input;
-  const typedClient = client as unknown as OpencodeClient;
+  try {
+    const { client, directory } = input;
+    const typedClient = client as unknown as OpencodeClient;
 
-  const saveDir = await ensureDirectory(directory, DEFAULT_CONFIG);
+    const saveDir = await ensureDirectory(directory, DEFAULT_CONFIG);
 
-  const hooks: Hooks = {
-    event: async ({ event }: { event: Event }) => {
-      await handleEvent(event, typedClient, directory, saveDir);
-    },
-  };
+    const hooks: Hooks = {
+      event: async ({ event }: { event: Event }) => {
+        try {
+          await handleEvent(event, typedClient, directory, saveDir);
+        } catch {
+          // Silently ignore event handling errors to not affect other plugins
+        }
+      },
+    };
 
-  return hooks;
+    return hooks;
+  } catch {
+    // Return empty hooks if initialization fails to not block other plugins
+    return {};
+  }
 };
 
 async function handleEvent(
