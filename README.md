@@ -5,8 +5,9 @@ Automatically save your OpenCode conversations to markdown files.
 ## Features
 
 - Automatic file creation when you start a new conversation
-- Auto-saves when the session becomes idle
-- Files organized by timestamp and topic: `YYYYMMDD-HHMMSS-topic.md`
+- Auto-saves when the session becomes idle (silent execution, no console output)
+- Files organized by timestamp and topic: `YYYYMMDD-HH-MM-SS-topic.md`
+- Images saved as separate files instead of base64 (keeps markdown clean)
 - Full tool call details preserved (inputs and outputs)
 - Child sessions (subagent tasks) inlined within parent files
 - Clean, readable markdown format
@@ -43,40 +44,52 @@ Once installed, the plugin automatically:
 1. Creates a `./conversations/` directory in your project
 2. Creates a new markdown file when you start a conversation
 3. Saves all messages when the session becomes idle (2 second debounce)
-4. Includes child session (subagent) content inline in the parent file
+4. Saves images to `./conversations/images/` directory
+5. Includes child session (subagent) content inline in the parent file
 
 No configuration needed - just install and start chatting!
 
 ## File Naming
 
-Files are named using the format: `YYYYMMDD-HHMMSS-topic.md`
+### Markdown Files
 
-- **Date/Time**: When the conversation started
-- **Topic**: Session title or first 30 characters of your first message
+Format: `YYYYMMDD-HH-MM-SS-topic.md`
+
+- **Date/Time**: When the conversation started (with hyphens between hours, minutes, seconds)
+- **Topic**: Extracted from your first message (max 30 characters)
 
 Examples:
-- `20240115-103045-implement-authentication.md`
-- `20240115-142230-fix-bug-in-parser.md`
-- `20240115-163015-untitled.md`
+- `20250129-10-30-45-implement-authentication.md`
+- `20250129-14-22-30-fix-bug-in-parser.md`
+
+### Image Files
+
+Format: `YYYYMMDD-HH-MM-SS-topic-index.ext`
+
+Images are saved to `./conversations/images/` directory:
+- `20250129-10-30-45-implement-authentication-0.png`
+- `20250129-10-30-45-implement-authentication-1.jpg`
 
 ## Output Format
 
 ```markdown
 # Session: Implement user authentication
 
-**Created:** 2024-01-15 10:30:45
+**Created:** 2025-01-29 10:30:45
 
 ---
 
 ## Conversation
 
 ### User
-*2024-01-15 10:30:45*
+*2025-01-29 10:30:45*
 
 Help me implement user authentication for my app
 
+![screenshot](images/20250129-10-30-45-implement-authentication-0.png)
+
 ### Assistant
-*2024-01-15 10:30:50*
+*2025-01-29 10:30:50*
 
 I'll help you implement user authentication. Let me first check your current setup.
 
@@ -84,18 +97,18 @@ I'll help you implement user authentication. Let me first check your current set
 **Status:** completed
 
 **Input:**
-\`\`\`json
+```json
 {
   "filePath": "src/app.ts"
 }
-\`\`\`
+```
 
 **Output:**
-\`\`\`
+```
 import express from 'express';
 const app = express();
 // ... file content
-\`\`\`
+```
 
 Based on what I see, I recommend...
 
@@ -104,22 +117,31 @@ Based on what I see, I recommend...
 ## Child Sessions
 
 ### Subagent: Code Review
-*Started: 2024-01-15 10:35:00*
+*Started: 2025-01-29 10:35:00*
 
 #### User
-*2024-01-15 10:35:00*
+*2025-01-29 10:35:00*
 
 Review the authentication implementation
 
 #### Assistant
-*2024-01-15 10:35:10*
+*2025-01-29 10:35:10*
 
 The implementation looks good...
 ```
 
-## Where Are Files Saved?
+## Directory Structure
 
-Conversation files are saved in the `./conversations/` directory relative to your project root (the directory where you run OpenCode).
+```
+your-project/
+├── conversations/
+│   ├── images/
+│   │   ├── 20250129-10-30-45-topic-0.png
+│   │   └── 20250129-10-30-45-topic-1.jpg
+│   ├── 20250129-10-30-45-implement-auth.md
+│   └── 20250129-14-22-30-fix-bug.md
+└── ...
+```
 
 ## Troubleshooting
 
@@ -127,7 +149,6 @@ Conversation files are saved in the `./conversations/` directory relative to you
 
 1. Check that the plugin is listed in your `opencode.json`
 2. Verify the project directory is writable
-3. Look for `[autosave]` messages in the OpenCode console
 
 ### Missing content
 
