@@ -72,7 +72,7 @@ Images are saved to `./conversations/images/` directory:
 
 ## Output Format
 
-```markdown
+~~~~markdown
 # Session: Implement user authentication
 
 **Created:** 2025-01-29 10:30:45
@@ -128,7 +128,7 @@ Review the authentication implementation
 *2025-01-29 10:35:10*
 
 The implementation looks good...
-```
+~~~~
 
 ## Directory Structure
 

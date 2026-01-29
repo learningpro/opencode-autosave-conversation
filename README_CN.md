@@ -72,7 +72,7 @@ npm install opencode-autosave-conversation
 
 ## 输出格式
 
-```markdown
+~~~~markdown
 # Session: 实现用户认证
 
 **Created:** 2025-01-29 10:30:45
@@ -128,7 +128,7 @@ const app = express();
 *2025-01-29 10:35:10*
 
 实现看起来不错...
-```
+~~~~
 
 ## 目录结构
 
