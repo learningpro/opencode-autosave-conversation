@@ -98,13 +98,10 @@ const plugin: Plugin = async (input) => {
   const { client, directory } = input;
   const typedClient = client as unknown as OpencodeClient;
 
-  console.log(`[autosave] Plugin initializing, directory: ${directory}`);
   const saveDir = await ensureDirectory(directory, DEFAULT_CONFIG);
-  console.log(`[autosave] Save directory: ${saveDir}`);
 
   const hooks: Hooks = {
     event: async ({ event }: { event: Event }) => {
-      console.log(`[autosave] Event received: ${event.type}`);
       await handleEvent(event, typedClient, directory, saveDir);
     },
   };
