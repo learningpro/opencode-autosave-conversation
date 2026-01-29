@@ -16,12 +16,12 @@
 ## 安装
 
 ```bash
-npm install opencode-autosave-conversation
+npm install -g opencode-autosave-conversation
 ```
 
 ## 配置
 
-在 `opencode.json` 中添加插件：
+在 `opencode.json`（项目级或 `~/.config/opencode/opencode.json`）中添加插件：
 
 ```json
 {
@@ -29,7 +29,7 @@ npm install opencode-autosave-conversation
 }
 ```
 
-本地开发时：
+本地开发时，使用 `file://` 协议：
 
 ```json
 {

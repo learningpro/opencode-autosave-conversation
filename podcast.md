@@ -73,13 +73,13 @@ AI 助手用了什么工具，读了哪个文件，输入是什么，输出是�
 
 好了好了，说了这么多，到底怎么用呢？
 
-**第一步：安装**
+**第一步：全局安装**
 
 ```bash
-npm install opencode-autosave-conversation
+npm install -g opencode-autosave-conversation
 ```
 
-一行命令，搞定。比泡面还快。
+一行命令，全局安装，搞定。比泡面还快。
 
 **第二步：配置**
 

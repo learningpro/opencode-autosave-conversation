@@ -16,12 +16,12 @@ Automatically save your OpenCode conversations to markdown files.
 ## Installation
 
 ```bash
-npm install opencode-autosave-conversation
+npm install -g opencode-autosave-conversation
 ```
 
 ## Configuration
 
-Add the plugin to your `opencode.json`:
+Add the plugin to your `opencode.json` (project-level or `~/.config/opencode/opencode.json`):
 
 ```json
 {
@@ -29,7 +29,7 @@ Add the plugin to your `opencode.json`:
 }
 ```
 
-Or for local development:
+For local development, use the `file://` protocol:
 
 ```json
 {
