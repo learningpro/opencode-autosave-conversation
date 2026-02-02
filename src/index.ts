@@ -12,6 +12,10 @@ import {
   isBase64ImageUrl,
   saveImageFromBase64,
   generateFilename,
+  getGlobalSaveDirectory,
+  ensureGlobalDirectory,
+  writeToSecondaryLocation,
+  saveImageToSecondaryLocation,
 } from './file-manager.js';
 import { join } from 'node:path';
 import {
@@ -101,10 +105,16 @@ const plugin: Plugin = async (input) => {
 
     const saveDir = await ensureDirectory(directory, DEFAULT_CONFIG);
 
+    let globalSaveDir: string | null = null;
+    const globalPath = getGlobalSaveDirectory(directory);
+    if (globalPath) {
+      globalSaveDir = await ensureGlobalDirectory(globalPath);
+    }
+
     const hooks: Hooks = {
       event: async ({ event }: { event: Event }) => {
         try {
-          await handleEvent(event, typedClient, directory, saveDir);
+          await handleEvent(event, typedClient, directory, saveDir, globalSaveDir);
         } catch {
           // Silently ignore event handling errors to not affect other plugins
         }
@@ -122,7 +132,8 @@ async function handleEvent(
   event: Event,
   client: OpencodeClient,
   directory: string,
-  saveDir: string
+  saveDir: string,
+  globalSaveDir: string | null
 ): Promise<void> {
   switch (event.type) {
     case 'session.created':
@@ -132,14 +143,15 @@ async function handleEvent(
       handleSessionUpdated(event as SessionUpdatedEvent);
       break;
     case 'session.idle':
-      handleSessionIdle(event as SessionIdleEvent, client, directory, saveDir);
+      handleSessionIdle(event as SessionIdleEvent, client, directory, saveDir, globalSaveDir);
       break;
     case 'session.deleted':
       await handleSessionDeleted(
         event as SessionDeletedEvent,
         client,
         directory,
-        saveDir
+        saveDir,
+        globalSaveDir
       );
       break;
   }
@@ -169,7 +181,8 @@ function handleSessionIdle(
   event: SessionIdleEvent,
   client: OpencodeClient,
   directory: string,
-  saveDir: string
+  saveDir: string,
+  globalSaveDir: string | null
 ): void {
   const { sessionID } = event.properties;
   if (!sessionID) return;
@@ -182,7 +195,7 @@ function handleSessionIdle(
   debounceTimers.set(
     sessionID,
     setTimeout(() => {
-      void saveSessionToFile(sessionID, client, directory, saveDir);
+      void saveSessionToFile(sessionID, client, directory, saveDir, globalSaveDir);
       debounceTimers.delete(sessionID);
     }, DEFAULT_CONFIG.debounceMs)
   );
@@ -192,7 +205,8 @@ async function handleSessionDeleted(
   event: SessionDeletedEvent,
   client: OpencodeClient,
   directory: string,
-  saveDir: string
+  saveDir: string,
+  globalSaveDir: string | null
 ): Promise<void> {
   const { info } = event.properties;
   if (!info?.id) return;
@@ -203,7 +217,7 @@ async function handleSessionDeleted(
     debounceTimers.delete(info.id);
   }
 
-  await saveSessionToFile(info.id, client, directory, saveDir);
+  await saveSessionToFile(info.id, client, directory, saveDir, globalSaveDir);
   deleteSession(info.id);
 }
 
@@ -211,7 +225,8 @@ async function saveSessionToFile(
   sessionID: string,
   client: OpencodeClient,
   directory: string,
-  saveDir: string
+  saveDir: string,
+  globalSaveDir: string | null
 ): Promise<void> {
   try {
     const session = getSession(sessionID);
@@ -220,7 +235,7 @@ async function saveSessionToFile(
     if (session.parentID) {
       const parent = getSession(session.parentID);
       if (parent) {
-        await saveSessionToFile(session.parentID, client, directory, saveDir);
+        await saveSessionToFile(session.parentID, client, directory, saveDir, globalSaveDir);
       }
       return;
     }
@@ -276,9 +291,9 @@ async function saveSessionToFile(
       })
     );
 
-    await processImagesInMessages(messages, session.filePath, title, session.createdAt);
+    await processImagesInMessages(messages, session.filePath, title, session.createdAt, globalSaveDir);
     for (const child of childData) {
-      await processImagesInMessages(child.messages, session.filePath, title, session.createdAt);
+      await processImagesInMessages(child.messages, session.filePath, title, session.createdAt, globalSaveDir);
     }
 
     const content = formatSession(
@@ -288,6 +303,10 @@ async function saveSessionToFile(
       childData
     );
     await writeSessionFile(session.filePath, content);
+
+    if (globalSaveDir) {
+      await writeToSecondaryLocation(session.filePath, globalSaveDir, content);
+    }
   } catch (error) {
     console.error(`[autosave] Error saving session ${sessionID}:`, error);
   }
@@ -309,7 +328,8 @@ async function processImagesInMessages(
   messages: MessageData[],
   mdFilePath: string,
   sessionTitle: string,
-  createdAt: Date
+  createdAt: Date,
+  globalSaveDir: string | null
 ): Promise<void> {
   let imageIndex = 0;
   for (const message of messages) {
@@ -320,6 +340,11 @@ async function processImagesInMessages(
           const localPath = await saveImageFromBase64(filePart.url, mdFilePath, sessionTitle, createdAt, imageIndex);
           if (localPath) {
             filePart.localPath = localPath;
+
+            if (globalSaveDir) {
+              await saveImageToSecondaryLocation(filePart.url, globalSaveDir, sessionTitle, createdAt, imageIndex);
+            }
+
             imageIndex++;
           }
         }
