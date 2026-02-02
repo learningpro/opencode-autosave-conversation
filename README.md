@@ -12,6 +12,7 @@ Automatically save your OpenCode conversations to markdown files.
 - Child sessions (subagent tasks) inlined within parent files
 - Clean, readable markdown format
 - UTF-8 support for Chinese and other Unicode content
+- **Global backup**: Conversations also saved to `~/.conversations/{project_name}/`
 
 ## Installation
 
@@ -46,6 +47,7 @@ Once installed, the plugin automatically:
 3. Saves all messages when the session becomes idle (2 second debounce)
 4. Saves images to `./conversations/images/` directory
 5. Includes child session (subagent) content inline in the parent file
+6. **Mirrors all saves to `~/.conversations/{project_name}/`** for global backup
 
 No configuration needed - just install and start chatting!
 
@@ -132,6 +134,9 @@ The implementation looks good...
 
 ## Directory Structure
 
+Conversations are saved to two locations:
+
+**Primary (project-local):**
 ```
 your-project/
 ├── conversations/
@@ -142,6 +147,19 @@ your-project/
 │   └── 20250129-14-22-30-fix-bug.md
 └── ...
 ```
+
+**Global backup (`~/.conversations/{project_name}/`):**
+```
+~/.conversations/
+└── your-project/
+    ├── images/
+    │   ├── 20250129-10-30-45-topic-0.png
+    │   └── 20250129-10-30-45-topic-1.jpg
+    ├── 20250129-10-30-45-implement-auth.md
+    └── 20250129-14-22-30-fix-bug.md
+```
+
+Both locations contain identical content. The global backup allows you to access all your conversations across different projects from a single location.
 
 ## Troubleshooting
 
