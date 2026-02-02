@@ -1,5 +1,6 @@
 import { mkdir, writeFile, rename, access, unlink } from 'node:fs/promises';
-import { join, dirname } from 'node:path';
+import { join, dirname, basename } from 'node:path';
+import { homedir } from 'node:os';
 import type { PluginConfig } from './types.js';
 
 const INVALID_FILENAME_CHARS = /[/\\:*?"<>|]/g;
@@ -144,5 +145,78 @@ export async function saveImageFromBase64(
   } catch (error) {
     console.error('[autosave] Failed to save image:', error);
     return null;
+  }
+}
+
+export function getGlobalSaveDirectory(projectDir: string): string | null {
+  try {
+    const home = homedir();
+    if (!home) {
+      return null;
+    }
+
+    const projectName = basename(projectDir);
+    const sanitizedProjectName = sanitizeTopic(projectName, 50);
+
+    return join(home, '.conversations', sanitizedProjectName);
+  } catch {
+    return null;
+  }
+}
+
+export async function ensureGlobalDirectory(
+  globalSaveDir: string
+): Promise<string | null> {
+  try {
+    await mkdir(globalSaveDir, { recursive: true });
+    return globalSaveDir;
+  } catch (error) {
+    console.error(
+      `[autosave] Failed to create global directory ${globalSaveDir}:`,
+      error
+    );
+    return null;
+  }
+}
+
+export async function writeToSecondaryLocation(
+  primaryFilePath: string,
+  globalSaveDir: string,
+  content: string
+): Promise<void> {
+  try {
+    const filename = basename(primaryFilePath);
+    const secondaryPath = join(globalSaveDir, filename);
+    await writeSessionFile(secondaryPath, content);
+  } catch (error) {
+    console.error(`[autosave] Failed to write to secondary location:`, error);
+  }
+}
+
+export async function saveImageToSecondaryLocation(
+  base64Url: string,
+  globalSaveDir: string,
+  sessionTitle: string,
+  createdAt: Date,
+  imageIndex: number
+): Promise<void> {
+  const extracted = extractBase64Data(base64Url);
+  if (!extracted) return;
+
+  const imagesDir = join(globalSaveDir, 'images');
+  const dateStr = formatDateForFilename(createdAt);
+  const sanitizedTitle = sanitizeTopic(sessionTitle, 50);
+
+  try {
+    await mkdir(imagesDir, { recursive: true });
+
+    const ext = extracted.format === 'jpeg' ? 'jpg' : extracted.format;
+    const imageFilename = `${dateStr}-${sanitizedTitle}-${imageIndex}.${ext}`;
+    const imagePath = join(imagesDir, imageFilename);
+
+    const buffer = Buffer.from(extracted.data, 'base64');
+    await writeFile(imagePath, buffer);
+  } catch (error) {
+    console.error('[autosave] Failed to save image to secondary location:', error);
   }
 }
