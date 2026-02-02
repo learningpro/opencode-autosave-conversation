@@ -1,6 +1,6 @@
 {
   "name": "opencode-autosave-conversation",
-  "version": "1.0.3",
+  "version": "1.1.0",
   "description": "OpenCode plugin to automatically save conversation records to markdown files",
   "type": "module",
   "main": "./dist/index.js",
