@@ -148,7 +148,11 @@ export async function saveImageFromBase64(
   }
 }
 
-export function getGlobalSaveDirectory(projectDir: string): string | null {
+export function getGlobalSaveDirectory(projectDir: string, config: PluginConfig): string | null {
+  if (!config.globalEnabled) {
+    return null;
+  }
+
   try {
     const home = homedir();
     if (!home) {
@@ -158,7 +162,9 @@ export function getGlobalSaveDirectory(projectDir: string): string | null {
     const projectName = basename(projectDir);
     const sanitizedProjectName = sanitizeTopic(projectName, 50);
 
-    return join(home, '.conversations', sanitizedProjectName);
+    // Use configured global directory, or fall back to ~/.conversations
+    const baseDir = config.globalSaveDirectory || join(home, '.conversations');
+    return join(baseDir, sanitizedProjectName);
   } catch {
     return null;
   }
