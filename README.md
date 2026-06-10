@@ -38,18 +38,54 @@ For local development, use the `file://` protocol:
 }
 ```
 
+### Environment Variables
+
+You can customize save locations via environment variables:
+
+| Variable | Description | Default |
+|---|---|---|
+| `OPENCODE_AUTOSAVE_DIR` | Local save directory (relative to project root, or absolute path). Set to `false` to disable local saves. | `./conversations` |
+| `OPENCODE_AUTOSAVE_GLOBAL_DIR` | Global (secondary) save base directory. The project name is appended as a subdirectory automatically. Set to `false` to disable global saves. | `~/.conversations` |
+
+**Examples:**
+
+Save only to a global `~/Notes/conversations/` directory (no local project copies):
+
+```bash
+OPENCODE_AUTOSAVE_DIR=false \
+OPENCODE_AUTOSAVE_GLOBAL_DIR=~/Notes/conversations \
+opencode
+```
+
+Save locally to a custom directory:
+
+```bash
+OPENCODE_AUTOSAVE_DIR=.opencode/history \
+opencode
+```
+
+Disable all saving:
+
+```bash
+OPENCODE_AUTOSAVE_DIR=false \
+OPENCODE_AUTOSAVE_GLOBAL_DIR=false \
+opencode
+```
+
+You can set these permanently in your shell profile (e.g. `~/.zshrc`, `~/.bashrc`).
+
 ## Usage
 
 Once installed, the plugin automatically:
 
-1. Creates a `./conversations/` directory in your project
+1. Creates a `./conversations/` directory in your project (unless disabled via `OPENCODE_AUTOSAVE_DIR=false`)
 2. Creates a new markdown file when you start a conversation
 3. Saves all messages when the session becomes idle (2 second debounce)
 4. Saves images to `./conversations/images/` directory
 5. Includes child session (subagent) content inline in the parent file
-6. **Mirrors all saves to `~/.conversations/{project_name}/`** for global backup
+6. **Mirrors all saves to `~/.conversations/{project_name}/`** for global backup (configurable via `OPENCODE_AUTOSAVE_GLOBAL_DIR`)
 
-No configuration needed - just install and start chatting!
+No configuration needed - just install and start chatting! Customize save locations with environment variables if desired.
 
 ## File Naming
 
@@ -134,9 +170,9 @@ The implementation looks good...
 
 ## Directory Structure
 
-Conversations are saved to two locations:
+Conversations are saved to two locations (both configurable):
 
-**Primary (project-local):**
+**Primary (project-local) — `OPENCODE_AUTOSAVE_DIR`:**
 ```
 your-project/
 ├── conversations/
@@ -148,7 +184,7 @@ your-project/
 └── ...
 ```
 
-**Global backup (`~/.conversations/{project_name}/`):**
+**Global backup — `OPENCODE_AUTOSAVE_GLOBAL_DIR`:**
 ```
 ~/.conversations/
 └── your-project/
@@ -159,7 +195,7 @@ your-project/
     └── 20250129-14-22-30-fix-bug.md
 ```
 
-Both locations contain identical content. The global backup allows you to access all your conversations across different projects from a single location.
+Both locations contain identical content. The global backup allows you to access all your conversations across different projects from a single location. Either location can be disabled independently.
 
 ## Troubleshooting
 

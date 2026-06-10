@@ -103,12 +103,20 @@ const plugin: Plugin = async (input) => {
     const { client, directory } = input;
     const typedClient = client as unknown as OpencodeClient;
 
-    const saveDir = await ensureDirectory(directory, DEFAULT_CONFIG);
+    let saveDir: string | null = null;
+    if (DEFAULT_CONFIG.localEnabled) {
+      saveDir = await ensureDirectory(directory, DEFAULT_CONFIG);
+    }
 
     let globalSaveDir: string | null = null;
-    const globalPath = getGlobalSaveDirectory(directory);
+    const globalPath = getGlobalSaveDirectory(directory, DEFAULT_CONFIG);
     if (globalPath) {
       globalSaveDir = await ensureGlobalDirectory(globalPath);
+    }
+
+    // If both save locations are disabled, nothing to do
+    if (!saveDir && !globalSaveDir) {
+      return {};
     }
 
     const hooks: Hooks = {
@@ -132,7 +140,7 @@ async function handleEvent(
   event: Event,
   client: OpencodeClient,
   directory: string,
-  saveDir: string,
+  saveDir: string | null,
   globalSaveDir: string | null
 ): Promise<void> {
   switch (event.type) {
@@ -181,7 +189,7 @@ function handleSessionIdle(
   event: SessionIdleEvent,
   client: OpencodeClient,
   directory: string,
-  saveDir: string,
+  saveDir: string | null,
   globalSaveDir: string | null
 ): void {
   const { sessionID } = event.properties;
@@ -205,7 +213,7 @@ async function handleSessionDeleted(
   event: SessionDeletedEvent,
   client: OpencodeClient,
   directory: string,
-  saveDir: string,
+  saveDir: string | null,
   globalSaveDir: string | null
 ): Promise<void> {
   const { info } = event.properties;
@@ -225,7 +233,7 @@ async function saveSessionToFile(
   sessionID: string,
   client: OpencodeClient,
   directory: string,
-  saveDir: string,
+  saveDir: string | null,
   globalSaveDir: string | null
 ): Promise<void> {
   try {
@@ -272,7 +280,10 @@ async function saveSessionToFile(
 
     if (!session.filePath) {
       const filename = generateFilename(title || 'untitled', session.createdAt, DEFAULT_CONFIG);
-      session.filePath = join(saveDir, filename);
+      // Use local save dir if available, otherwise use global dir for file path reference
+      const baseDir = saveDir || globalSaveDir;
+      if (!baseDir) return;
+      session.filePath = join(baseDir, filename);
     }
 
     const children = getChildSessions(sessionID);
@@ -302,7 +313,10 @@ async function saveSessionToFile(
       messages,
       childData
     );
-    await writeSessionFile(session.filePath, content);
+
+    if (saveDir) {
+      await writeSessionFile(session.filePath, content);
+    }
 
     if (globalSaveDir) {
       await writeToSecondaryLocation(session.filePath, globalSaveDir, content);
